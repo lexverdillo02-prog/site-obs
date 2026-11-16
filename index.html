@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f3a5f">
+<title>Site Observations</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--navy:#1f3a5f;--navy2:#2c4f7c;--accent:#f28c28;--bg:#f3f5f8;--card:#fff;--text:#1d2733;--muted:#6b7785;--line:#e1e6ec;--red:#d64541;--grey:#7d8894;--ok:#2e9e5b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:4px;height:56px;padding:0 6px;background:var(--navy);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+header h1{flex:1;font-size:18px;margin:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+header button{background:none;border:0;color:#fff;font-size:22px;min-width:44px;height:44px;border-radius:8px;padding:0 8px;font-weight:600}
+header button.txt{font-size:14px;border:1px solid rgba(255,255,255,.5)}
+header button:active{background:rgba(255,255,255,.15)}
+main{padding:12px 12px 110px;max-width:720px;margin:0 auto}
+.card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;font:inherit;color:inherit;cursor:pointer}
+.card:active{background:#f7f9fb}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.badge{min-width:52px;height:52px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;padding:0 6px;flex:none}
+.thumb{width:60px;height:60px;border-radius:8px;object-fit:cover;background:#dde3ea;flex:none}
+.grow{flex:1;min-width:0}
+.t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s{color:var(--muted);font-size:13px}
+.chev{color:var(--muted);font-size:24px}
+.mini{background:none;border:1px solid var(--line);border-radius:8px;min-width:40px;height:40px;font-size:18px;color:var(--navy)}
+.btn{display:block;width:100%;padding:14px;border-radius:12px;border:0;background:var(--navy);color:#fff;font:600 16px system-ui,sans-serif;margin:8px 0;cursor:pointer}
+.btn:active{filter:brightness(.92)}
+.btn:disabled{opacity:.5}
+.btn.accent{background:var(--accent)}
+.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+.btn.danger{background:#fff;color:var(--red);border:1px solid #f0c8c5}
+.fab{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:696px;margin:0 auto;z-index:15;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+label{display:block;font-size:13px;color:var(--muted);margin:16px 0 5px;font-weight:600}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:16px system-ui,sans-serif;background:#fff;color:var(--text)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);border-color:transparent}
+textarea{min-height:120px;resize:vertical}
+.help{font-size:12px;color:var(--muted);margin-top:4px}
+h2{font-size:13px;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;margin:22px 2px 8px}
+.empty{color:var(--muted);text-align:center;padding:28px 10px;background:#fff;border:1px dashed var(--line);border-radius:12px}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ph{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#dde3ea}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph button{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:16px}
+.ph .lt{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.65);color:#fff;font-size:12px;border-radius:6px;padding:1px 6px}
+.row{display:flex;gap:8px}
+.row .btn{flex:1}
+.idtag{display:inline-block;background:#e8eef6;color:var(--navy);font-weight:700;border-radius:8px;padding:4px 10px;font-size:14px}
+.ok{color:var(--ok);font-weight:600}
+.box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}
+.locprev{width:100%;border-radius:10px;display:block;background:#dde3ea}
+.planprev{width:100%;max-height:260px;object-fit:contain;background:#dde3ea;border-radius:10px;margin-top:8px;display:block}
+/* plan viewer */
+.pv{position:fixed;left:0;right:0;top:56px;bottom:0;overflow:hidden;background:#c9d1da;touch-action:none;z-index:1}
+.pz{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.pz img{display:block;width:100%;height:100%;user-select:none;-webkit-user-drag:none;pointer-events:none;background:#fff}
+.pin{position:absolute;transform-origin:50% 100%;transform:translate(-50%,-100%) scale(var(--inv,1));cursor:pointer}
+.pin b{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--red);border:2px solid #fff;color:#fff;font-size:12px;font-weight:700;box-shadow:0 2px 5px rgba(0,0,0,.35)}
+.pin::after{content:"";display:block;width:0;height:0;margin:-2px auto 0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:11px solid var(--red)}
+.pin.old b{background:var(--grey)}.pin.old::after{border-top-color:var(--grey)}
+.pin.temp b{background:var(--accent)}.pin.temp::after{border-top-color:var(--accent)}
+.pvbar{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid var(--line)}
+.pvbar .hint{text-align:center;color:var(--muted);font-size:14px;padding:6px 0}
+.zoom{position:fixed;right:10px;top:68px;display:flex;flex-direction:column;gap:8px;z-index:5}
+.zoom button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:20px;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:22px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50;max-width:90%;text-align:center;font-size:14px}
+#toast.on{opacity:.94}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-3px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <button id="back" aria-label="Back">‹</button>
+  <h1 id="title">Site Observations</h1>
+  <div id="actions"></div>
+</header>
+<main id="view"></main>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const APP_VERSION = '1.0.0';
+const CATEGORIES = ['HSE', 'Structure', 'Architectural', 'MEP', 'General'];
+const PLACEHOLDER = '[CLAUDE TO RECOMMEND]';
+
+/* ---------------- storage (IndexedDB) ---------------- */
+let _db;
+function db() {
+  if (_db) return Promise.resolve(_db);
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('siteobs', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      ['projects', 'levels', 'obs'].forEach(s => { if (!d.objectStoreNames.contains(s)) d.createObjectStore(s, { keyPath: 'id' }); });
+    };
+    r.onsuccess = () => { _db = r.result; res(_db); };
+    r.onerror = () => rej(r.error);
+  });
+}
+async function tx(store, mode, fn) {
+  const d = await db();
+  return new Promise((res, rej) => {
+    const t = d.transaction(store, mode);
+    let out;
+    const r = fn(t.objectStore(store));
+    if (r) r.onsuccess = () => { out = r.result; };
+    t.oncomplete = () => res(out);
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error);
+  });
+}
+const put = (st, o) => tx(st, 'readwrite', s => s.put(o));
+const get = (st, id) => tx(st, 'readonly', s => s.get(id));
+const del = (st, id) => tx(st, 'readwrite', s => s.delete(id));
+const all = st => tx(st, 'readonly', s => s.getAll());
+
+function setting(k, v) {
+  try {
+    if (v === undefined) return localStorage.getItem('so_' + k) || '';
+    localStorage.setItem('so_' + k, v);
+  } catch (e) { return ''; }
+}
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const view = $('#view');
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = (n, l = 2) => String(n).padStart(l, '0');
+const dateKey = ts => { const d = new Date(ts); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const fmtDate = ts => { const d = new Date(ts); return pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear(); };
+const fmtDT = ts => { const d = new Date(ts); return fmtDate(ts) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const fmtKey = k => { const [y, m, d] = k.split('-'); return d + '-' + m + '-' + y; };
+const cleanCode = s => String(s || '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
+const slug = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'observation';
+const obsId = (p, l, o) => cleanCode(p.code) + '_' + cleanCode(l.code) + '_' + pad(o.seq, 3);
+const fmtSize = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+
+let urls = [];
+function objURL(blob) { const u = URL.createObjectURL(blob); urls.push(u); return u; }
+function freeURLs() { urls.forEach(u => URL.revokeObjectURL(u)); urls = []; }
+
+let toastT;
+function toast(msg, ms = 2200) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms);
+}
+
+async function bitmap(blob) {
+  if (window.createImageBitmap) {
+    try { return await createImageBitmap(blob, { imageOrientation: 'from-image' }); } catch (e) { /* fall back */ }
+  }
+  const u = URL.createObjectURL(blob);
+  const i = new Image(); i.src = u; await i.decode(); URL.revokeObjectURL(u);
+  return i;
+}
+const canvasBlob = (c, type, q) => new Promise(r => c.toBlob(r, type, q));
+async function resizeImage(blob, max, type, q) {
+  const b = await bitmap(blob);
+  const w = b.width, h = b.height, k = Math.min(1, max / Math.max(w, h));
+  if (k === 1 && blob.type === type && blob.size < 3e6) return blob;
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(b, 0, 0, c.width, c.height);
+  return canvasBlob(c, type, q);
+}
+function suggestCode(name) {
+  const n = name.trim(), m = n.match(/\d+/);
+  const words = n.replace(/\d+/g, ' ').trim().split(/\s+/).filter(Boolean);
+  const first = (words[0] || '').toLowerCase();
+  if (m) return ((words[0] || 'L')[0].toUpperCase()) + pad(m[0]);
+  const map = { roof: 'RF', ground: 'GF', mezzanine: 'MZ', podium: 'PD', basement: 'BS', terrace: 'TR', upper: 'UR' };
+  return map[first] || words.map(w => w[0]).join('').toUpperCase().slice(0, 3) || 'LV';
+}
+
+/* ---------------- drawing (plan crops / all-pins) ---------------- */
+function drawMarker(ctx, x, y, r, text, color) {
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.lineWidth = Math.max(2, r * 0.18); ctx.strokeStyle = '#fff'; ctx.stroke();
+  if (text) {
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(r * 0.95) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y + r * 0.05);
+  }
+  ctx.restore();
+}
+function captionBar(ctx, w, h, text, top) {
+  const fs = Math.max(16, Math.round(w * 0.022)), bh = Math.round(fs * 2);
+  ctx.save();
+  ctx.fillStyle = 'rgba(31,58,95,0.92)';
+  ctx.fillRect(0, top ? 0 : h - bh, w, bh);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold ' + fs + 'px sans-serif'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, Math.round(fs * 0.6), (top ? 0 : h - bh) + bh / 2, w - fs);
+  ctx.restore();
+}
+/* crop around one pin */
+function planCrop(img, x, y, label) {
+  const W = img.width, H = img.height;
+  const side = Math.min(Math.min(W, H), Math.max(500, Math.max(W, H) * 0.3));
+  let sx = x * W - side / 2, sy = y * H - side / 2;
+  sx = Math.max(0, Math.min(W - side, sx)); sy = Math.max(0, Math.min(H - side, sy));
+  const k = Math.min(2, 1400 / side), out = Math.round(side * k);
+  const c = document.createElement('canvas'); c.width = out; c.height = out;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, out, out);
+  ctx.drawImage(img, sx, sy, side, side, 0, 0, out, out);
+  const px = (x * W - sx) * k, py = (y * H - sy) * k, r = out * 0.025;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(px, py, r * 3.2, 0, Math.PI * 2);
+  ctx.lineWidth = r * 0.5; ctx.strokeStyle = 'rgba(214,69,65,0.85)'; ctx.stroke();
+  ctx.restore();
+  drawMarker(ctx, px, py, r, '', '#d64541');
+  if (label) captionBar(ctx, out, out, label, false);
+  return c;
+}
+/* full level with all numbered pins */
+function planAll(img, pins, title) {
+  const W = img.width, H = img.height, k = Math.min(1, 3000 / Math.max(W, H));
+  const w = Math.round(W * k), h = Math.round(H * k);
+  const fs = Math.max(16, Math.round(w * 0.022)), bh = Math.round(fs * 2);
+  const c = document.createElement('canvas'); c.width = w; c.height = h + bh;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h + bh);
+  ctx.drawImage(img, 0, bh, w, h);
+  const r = Math.max(16, Math.max(w, h) * 0.016);
+  pins.forEach(p => drawMarker(ctx, p.x * w, bh + p.y * h, r, p.text, '#d64541'));
+  captionBar(ctx, w, h + bh, title, true);
+  return c;
+}
+
+/* ---------------- ZIP (store, no compression) ---------------- */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+async function makeZip(files) {
+  const parts = [], central = []; let offset = 0;
+  const now = new Date();
+  const dt = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dd = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  const enc = new TextEncoder();
+  for (const f of files) {
+    const data = new Uint8Array(await f.blob.arrayBuffer());
+    const name = enc.encode(f.name), crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dt, true); lh.setUint16(12, dd, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(lh.buffer, name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dt, true); ch.setUint16(14, dd, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+    ch.setUint32(42, offset, true);
+    central.push(ch.buffer, name);
+    offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((a, b) => a + b.byteLength, 0);
+  const e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+  e.setUint32(12, cdSize, true); e.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, e.buffer], { type: 'application/zip' });
+}
+
+/* ---------------- export package ---------------- */
+async function buildExport(p, dKey, progress) {
+  const levels = (await all('levels')).filter(l => l.projectId === p.id);
+  const lmap = Object.fromEntries(levels.map(l => [l.id, l]));
+  const obs = (await all('obs'))
+    .filter(o => o.projectId === p.id && dateKey(o.createdAt) === dKey && lmap[o.levelId])
+    .sort((a, b) => (lmap[a.levelId].order - lmap[b.levelId].order) || (a.seq - b.seq));
+  const files = [];
+  const pc = cleanCode(p.code);
+  const txt = [];
+  const nl = '\r\n';
+  const by = setting('name');
+  txt.push('SITE OBSERVATION DATA', '',
+    'Project:       ' + p.name + ' (' + pc + ')',
+    'Visit date:    ' + fmtKey(dKey),
+    'Prepared by:   ' + (by || '-'),
+    'Observations:  ' + obs.length,
+    'Exported:      ' + fmtDT(Date.now()) + ' (Site Observation App v' + APP_VERSION + ')', '',
+    'FILES',
+    '  <ID><letter>_<keyword>.jpg      site photos (a, b, c ... when several per observation)',
+    '  <ID>_plan.jpg                   floor plan crop with the observation location circled',
+    '  ' + pc + '_<LEVEL>_plan_all_pins.jpg   whole level with every numbered pin of this visit',
+    '  "' + PLACEHOLDER + '" = no recommendation given on site; Claude drafts it from the DATASET and its judgement.', '');
+  let done = 0;
+  const byLevel = {};
+  obs.forEach(o => (byLevel[o.levelId] = byLevel[o.levelId] || []).push(o));
+  for (const lid of Object.keys(byLevel).sort((a, b) => lmap[a].order - lmap[b].order)) {
+    const l = lmap[lid], list = byLevel[lid];
+    const img = await bitmap(l.planBlob);
+    const lc = cleanCode(l.code);
+    const allC = planAll(img, list.map(o => ({ x: o.x, y: o.y, text: pad(o.seq, 3) })),
+      pc + ' · ' + l.name + ' · ' + fmtKey(dKey) + ' · ' + list.length + ' observation' + (list.length > 1 ? 's' : ''));
+    files.push({ name: pc + '_' + lc + '_plan_all_pins.jpg', blob: await canvasBlob(allC, 'image/jpeg', 0.9) });
+    for (const o of list) {
+      const id = obsId(p, l, o), kw = slug(o.keyword);
+      const crop = planCrop(img, o.x, o.y, id + ' · ' + l.name + (o.location ? ' · ' + o.location : ''));
+      files.push({ name: id + '_plan.jpg', blob: await canvasBlob(crop, 'image/jpeg', 0.9) });
+      const names = [];
+      (o.photos || []).forEach((ph, i) => {
+        const letter = i < 26 ? 'abcdefghijklmnopqrstuvwxyz'[i] : 'z' + i;
+        const fn = id + letter + '_' + kw + '.jpg';
+        names.push(id + letter);
+        files.push({ name: fn, blob: ph.blob });
+      });
+      const indent = s => String(s || '').trim().split(/\r?\n/).map(x => '  ' + x).join(nl);
+      txt.push('=== ' + id + ' ===',
+        'Project:        ' + p.name + ' (' + pc + ')',
+        'Level:          ' + l.name,
+        'Location:       ' + (o.location ? o.location + ' ' : '') + '(see ' + id + '_plan.jpg)',
+        'Category:       ' + o.category,
+        'Keyword:        ' + (o.keyword || '-'),
+        'Photos:         ' + (names.length ? names.join(', ') : 'none'),
+        'Date/Time:      ' + fmtDT(o.createdAt),
+        'Description:', indent(o.description || '-'),
+        'Recommendation:', indent(o.recommendation && o.recommendation.trim() ? o.recommendation : PLACEHOLDER), '');
+      done++; progress && progress(done, obs.length);
+    }
+    if (img.close) img.close();
+  }
+  files.unshift({ name: 'observations.txt', blob: new Blob([txt.join(nl)], { type: 'text/plain' }) });
+  const zip = await makeZip(files);
+  return { file: new File([zip], pc + '_' + dKey + '.zip', { type: 'application/zip' }), ids: obs.map(o => o.id) };
+}
+
+/* ---------------- router ---------------- */
+let state = { s: 'home' };
+function go(s, p = {}, replace = false) {
+  state = { s, ...p };
+  history[replace ? 'replaceState' : 'pushState'](state, '');
+  render();
+}
+window.addEventListener('popstate', e => { state = e.state || { s: 'home' }; render(); });
+$('#back').onclick = () => history.back();
+
+function setBar(title, back, actions = []) {
+  $('#title').textContent = title;
+  $('#back').style.visibility = back ? 'visible' : 'hidden';
+  const a = $('#actions'); a.innerHTML = '';
+  actions.forEach(x => {
+    const b = document.createElement('button');
+    b.textContent = x.label; if (x.cls) b.className = x.cls; if (x.aria) b.setAttribute('aria-label', x.aria);
+    b.onclick = x.fn; a.appendChild(b);
+  });
+}
+
+let rendering = 0;
+async function render() {
+  const my = ++rendering;
+  freeURLs();
+  document.body.style.overflow = '';
+  const fn = { home: vHome, project: vProject, projectForm: vProjectForm, levelForm: vLevelForm, plan: vPlan, obs: vObs, export: vExport, settings: vSettings }[state.s] || vHome;
+  try { await fn(my); } catch (e) { console.error(e); toast('Error: ' + e.message, 4000); }
+  window.scrollTo(0, 0);
+}
+
+/* ---------------- screens ---------------- */
+async function vHome() {
+  setBar('Site Observations', false, [{ label: '⚙', aria: 'Settings', fn: () => go('settings') }]);
+  const [ps, obs] = await Promise.all([all('projects'), all('obs')]);
+  ps.sort((a, b) => a.code.localeCompare(b.code));
+  const today = dateKey(Date.now());
+  view.innerHTML =
+    (setting('name') ? '' : '<div class="box">👋 First time? Tap <b>⚙</b> to enter your name (used as "Prepared by"), then add a project.</div>') +
+    '<h2>Projects</h2>' +
+    (ps.map(p => {
+      const o = obs.filter(x => x.projectId === p.id), t = o.filter(x => dateKey(x.createdAt) === today).length;
+      return `<div class="card" data-id="${p.id}"><div class="badge">${esc(p.code)}</div><div class="grow"><div class="t">${esc(p.name)}</div><div class="s">${o.length} observations · ${t} today</div></div><span class="chev">›</span></div>`;
+    }).join('') || '<div class="empty">No projects yet.<br>Add your first site below.</div>') +
+    '<button class="btn accent fab" id="add">＋ New project</button>';
+  view.querySelectorAll('.card').forEach(c => c.onclick = () => go('project', { projectId: c.dataset.id }));
+  $('#add').onclick = () => go('projectForm', {});
+}
+
+async function vProjectForm() {
+  const p = state.projectId ? await get('projects', state.projectId) : null;
+  setBar(p ? 'Edit project' : 'New project', true);
+  view.innerHTML = `
+    <label>Project code (short, used in file names)</label>
+    <input id="code" maxlength="12" placeholder="e.g. BV1" value="${esc(p?.code || '')}" autocapitalize="characters">
+    <label>Project name</label>
+    <input id="name" placeholder="e.g. Barari Views 1" value="${esc(p?.name || '')}">
+    <button class="btn accent" id="save">Save project</button>
+    ${p ? '<button class="btn danger" id="del">Delete project</button>' : ''}`;
+  $('#save').onclick = async () => {
+    const code = cleanCode($('#code').value), name = $('#name').value.trim();
+    if (!code || !name) return toast('Enter both code and name');
+    const all_ = await all('projects');
+    if (all_.some(x => x.code === code && x.id !== p?.id)) return toast('That code is already used');
+    const rec = p ? { ...p, code, name } : { id: uid(), code, name, created: Date.now() };
+    await put('projects', rec);
+    if (p) history.back(); else go('project', { projectId: rec.id }, true);
+  };
+  if (p) $('#del').onclick = async () => {
+    const obs = (await all('obs')).filter(o => o.projectId === p.id);
+    if (!confirm(`Delete project ${p.code} with all its floor plans and ${obs.length} observations? This cannot be undone.`)) return;
+    for (const o of obs) await del('obs', o.id);
+    for (const l of (await all('levels')).filter(l => l.projectId === p.id)) await del('levels', l.id);
+    await del('projects', p.id);
+    go('home', {}, true);
+  };
+}
+
+async function vProject() {
+  const p = await get('projects', state.projectId);
+  if (!p) return go('home', {}, true);
+  setBar(p.code + ' · ' + p.name, true, [{ label: '✎', aria: 'Edit project', fn: () => go('projectForm', { projectId: p.id }) }]);
+  const levels = (await all('levels')).filter(l => l.projectId === p.id).sort((a, b) => a.order - b.order);
+  const lmap = Object.fromEntries(levels.map(l => [l.id, l]));
+  const obs = (await all('obs')).filter(o => o.projectId === p.id).sort((a, b) => b.createdAt - a.createdAt);
+  const today = dateKey(Date.now());
+  const nToday = obs.filter(o => dateKey(o.createdAt) === today).length;
+  view.innerHTML = `
+    <button class="btn accent" id="send">📤 Send to Desktop ${nToday ? '(' + nToday + ' today)' : ''}</button>
+    <h2>Levels / floor plans</h2>
+    ${levels.map(l => `<div class="card" data-l="${l.id}"><img class="thumb" src="${objURL(l.planBlob)}" alt=""><div class="grow"><div class="t">${esc(l.name)}</div><div class="s">${esc(l.code)} · ${obs.filter(o => o.levelId === l.id).length} observations</div></div><button class="mini" data-e="${l.id}" aria-label="Edit level">✎</button></div>`).join('') || '<div class="empty">No floor plans yet. Add a level to start.</div>'}
+    <button class="btn ghost" id="addl">＋ Add level / floor plan</button>
+    <h2>Observations</h2>
+    ${obs.slice(0, 60).map(o => { const l = lmap[o.levelId]; if (!l) return ''; const ph = o.photos && o.photos[0];
+      return `<div class="card" data-o="${o.id}">${ph ? `<img class="thumb" src="${objURL(ph.blob)}" alt="">` : '<div class="thumb"></div>'}<div class="grow"><div class="t">${esc(obsId(p, l, o))} · ${esc(o.keyword || '')}</div><div class="s">${esc(o.category)} · ${fmtDT(o.createdAt)} ${o.exported ? '<span class="ok">· sent ✓</span>' : ''}</div></div><span class="chev">›</span></div>`; }).join('') || '<div class="empty">No observations yet.</div>'}`;
+  view.querySelectorAll('[data-l]').forEach(c => c.onclick = () => go('plan', { levelId: c.dataset.l }));
+  view.querySelectorAll('[data-e]').forEach(b => b.onclick = e => { e.stopPropagation(); go('levelForm', { levelId: b.dataset.e }); });
+  view.querySelectorAll('[data-o]').forEach(c => c.onclick = () => go('obs', { obsId: c.dataset.o }));
+  $('#addl').onclick = () => go('levelForm', { projectId: p.id });
+  $('#send').onclick = () => go('export', { projectId: p.id });
+}
+
+async function vLevelForm() {
+  const l = state.levelId ? await get('levels', state.levelId) : null;
+  const projectId = l ? l.projectId : state.projectId;
+  setBar(l ? 'Edit level' : 'Add level', true);
+  let planBlob = l?.planBlob || null, codeTouched = !!l;
+  view.innerHTML = `
+    <label>Level name</label>
+    <input id="name" placeholder="e.g. Level 6, Podium 3, Roof" value="${esc(l?.name || '')}">
+    <label>Level code (short, used in file names)</label>
+    <input id="code" maxlength="8" placeholder="e.g. L06" value="${esc(l?.code || '')}" autocapitalize="characters">
+    <label>Floor plan image</label>
+    <input id="file" type="file" accept="image/*">
+    <div class="help">PNG or JPG. For PDF drawings, send the PDF to Claude and ask for it to be converted into one image per level.</div>
+    <img id="prev" class="planprev" ${planBlob ? `src="${objURL(planBlob)}"` : 'style="display:none"'} alt="">
+    <button class="btn accent" id="save">Save level</button>
+    ${l ? '<button class="btn danger" id="del">Delete level</button>' : ''}`;
+  $('#name').oninput = () => { if (!codeTouched) $('#code').value = suggestCode($('#name').value); };
+  $('#code').oninput = () => { codeTouched = true; };
+  $('#file').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    if (/pdf/i.test(f.type) || /\.pdf$/i.test(f.name)) { e.target.value = ''; return toast('PDF not supported – ask Claude to convert it to an image', 4000); }
+    toast('Loading plan…');
+    try {
+      planBlob = await resizeImage(f, 4000, /jpe?g/i.test(f.type) ? 'image/jpeg' : 'image/png', 0.92);
+      const pr = $('#prev'); pr.src = objURL(planBlob); pr.style.display = 'block';
+    } catch (err) { toast('Could not read that image'); }
+  };
+  $('#save').onclick = async () => {
+    const name = $('#name').value.trim(), code = cleanCode($('#code').value || suggestCode(name));
+    if (!name) return toast('Enter the level name');
+    if (!planBlob) return toast('Choose the floor plan image');
+    const levels = (await all('levels')).filter(x => x.projectId === projectId);
+    if (levels.some(x => cleanCode(x.code) === code && x.id !== l?.id)) return toast('That level code is already used');
+    const rec = l ? { ...l, name, code, planBlob } : { id: uid(), projectId, name, code, planBlob, order: Date.now() };
+    await put('levels', rec);
+    toast('Level saved');
+    history.back();
+  };
+  if (l) $('#del').onclick = async () => {
+    const obs = (await all('obs')).filter(o => o.levelId === l.id);
+    if (!confirm(`Delete ${l.name} and its ${obs.length} observations? This cannot be undone.`)) return;
+    for (const o of obs) await del('obs', o.id);
+    await del('levels', l.id);
+    history.back();
+  };
+}
+
+const viewMem = {};
+async function vPlan(my) {
+  const l = await get('levels', state.levelId);
+  if (!l) return history.back();
+  const p = await get('projects', l.projectId);
+  const showAll = setting('showAll') === '1';
+  setBar(p.code + ' · ' + l.name, true, [{ label: showAll ? 'All' : 'Today', cls: 'txt', aria: 'Toggle pins', fn: () => { setting('showAll', showAll ? '0' : '1'); render(); } }]);
+  const today = dateKey(Date.now());
+  const obs = (await all('obs')).filter(o => o.levelId === l.id && (showAll || dateKey(o.createdAt) === today));
+  view.innerHTML = `<div class="pv" id="pv"><div class="pz" id="pz"><img id="pimg" alt=""></div></div>
+    <div class="zoom"><button id="zin" aria-label="Zoom in">＋</button><button id="zout" aria-label="Zoom out">－</button><button id="zfit" aria-label="Fit">⤢</button></div>
+    <div class="pvbar" id="pvbar"></div>`;
+  document.body.style.overflow = 'hidden';
+  const img = $('#pimg');
+  img.src = objURL(l.planBlob);
+  await img.decode();
+  if (my !== rendering) return;
+  const pz = $('#pz'), pv = $('#pv');
+  const W = img.naturalWidth, H = img.naturalHeight;
+  pz.style.width = W + 'px'; pz.style.height = H + 'px';
+  const addPin = (x, y, text, cls, id) => {
+    const d = document.createElement('div');
+    d.className = 'pin ' + (cls || ''); d.style.left = (x * 100) + '%'; d.style.top = (y * 100) + '%';
+    d.innerHTML = '<b>' + esc(text) + '</b>'; if (id) d.dataset.id = id;
+    pz.appendChild(d); return d;
+  };
+  obs.sort((a, b) => a.seq - b.seq).forEach(o => addPin(o.x, o.y, pad(o.seq, 3), dateKey(o.createdAt) === today ? '' : 'old', o.id));
+
+  let s = 1, tx = 0, ty = 0, minS = 0.1;
+  const apply = () => { pz.style.transform = `translate(${tx}px,${ty}px) scale(${s})`; pz.style.setProperty('--inv', 1 / s); viewMem[l.id] = { s, tx, ty }; };
+  const fit = () => { const r = pv.getBoundingClientRect(); const bottom = $('#pvbar').offsetHeight; const ah = r.height - bottom; s = Math.min(r.width / W, ah / H) * 0.96; minS = s * 0.5; tx = (r.width - W * s) / 2; ty = (ah - H * s) / 2; apply(); };
+  const zoomAt = (cx, cy, ns) => { const r = pv.getBoundingClientRect(); ns = Math.max(minS, Math.min(ns, 8)); const wx = (cx - r.left - tx) / s, wy = (cy - r.top - ty) / s; s = ns; tx = cx - r.left - wx * s; ty = cy - r.top - wy * s; apply(); };
+
+  const bar = $('#pvbar');
+  let temp = null;
+  const idleBar = () => { bar.innerHTML = `<div class="hint">Tap the plan where the observation is · ${obs.length} pin${obs.length === 1 ? '' : 's'} shown</div>`; };
+  idleBar();
+  if (viewMem[l.id]) { ({ s, tx, ty } = viewMem[l.id]); const r = pv.getBoundingClientRect(); minS = Math.min(r.width / W, r.height / H) * 0.5; apply(); } else fit();
+
+  const onTap = (x, y) => {
+    if (temp) temp.remove();
+    temp = addPin(x, y, '+', 'temp');
+    bar.innerHTML = '<div class="row"><button class="btn ghost" id="cx">Cancel</button><button class="btn accent" id="ok">Add observation here</button></div>';
+    $('#cx').onclick = () => { temp.remove(); temp = null; idleBar(); };
+    $('#ok').onclick = () => go('obs', { levelId: l.id, x, y });
+  };
+
+  const pts = new Map(); let start = null, moved = false, pinch = null;
+  const center = () => { const a = [...pts.values()]; return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1 }; };
+  pv.addEventListener('pointerdown', e => {
+    pv.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 1) { start = { x: e.clientX, y: e.clientY, t: Date.now(), target: e.target }; moved = false; }
+    if (pts.size === 2) { const c = center(); pinch = { ...c, s, tx, ty }; moved = true; }
+  });
+  pv.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId), cur = { x: e.clientX, y: e.clientY };
+    pts.set(e.pointerId, cur);
+    if (pts.size === 1) {
+      if (!moved && Math.hypot(cur.x - start.x, cur.y - start.y) > 8) moved = true;
+      if (moved) { tx += cur.x - prev.x; ty += cur.y - prev.y; apply(); }
+    } else if (pts.size === 2 && pinch) {
+      const c = center(), r = pv.getBoundingClientRect();
+      const ns = Math.max(minS, Math.min(pinch.s * c.d / pinch.d, 8));
+      const wx = (pinch.x - r.left - pinch.tx) / pinch.s, wy = (pinch.y - r.top - pinch.ty) / pinch.s;
+      s = ns; tx = c.x - r.left - wx * s; ty = c.y - r.top - wy * s; apply();
+    }
+  });
+  const end = (e, cancel) => {
+    if (!pts.has(e.pointerId)) return;
+    pts.delete(e.pointerId);
+    if (pts.size < 2) pinch = null;
+    if (pts.size === 0 && !cancel && !moved && start && Date.now() - start.t < 600) {
+      const pin = start.target.closest && start.target.closest('.pin');
+      if (pin && pin.dataset.id) return go('obs', { obsId: pin.dataset.id });
+      if (pin && pin.classList.contains('temp')) return;
+      const r = img.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      if (x >= 0 && x <= 1 && y >= 0 && y <= 1) onTap(x, y);
+    }
+  };
+  pv.addEventListener('pointerup', e => end(e, false));
+  pv.addEventListener('pointercancel', e => end(e, true));
+  pv.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, s * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); }, { passive: false });
+  const mid = () => { const r = pv.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  $('#zin').onclick = () => zoomAt(...mid(), s * 1.5);
+  $('#zout').onclick = () => zoomAt(...mid(), s / 1.5);
+  $('#zfit').onclick = fit;
+}
+
+async function vObs(my) {
+  let o, isNew = false;
+  if (state.obsId) { o = await get('obs', state.obsId); if (!o) return history.back(); }
+  else {
+    isNew = true;
+    o = { id: uid(), levelId: state.levelId, x: state.x, y: state.y, keyword: '', category: setting('lastCat') || 'HSE', location: '', description: '', recommendation: '', photos: [], createdAt: Date.now() };
+  }
+  const l = await get('levels', o.levelId), p = await get('projects', l.projectId);
+  o.projectId = p.id;
+  let photos = [...(o.photos || [])];
+  const levelObs = (await all('obs')).filter(x => x.levelId === l.id);
+  const nextSeq = isNew ? levelObs.reduce((m, x) => Math.max(m, x.seq || 0), 0) + 1 : o.seq;
+  const idText = obsId(p, l, { seq: nextSeq });
+  setBar(isNew ? 'New observation' : idText, true);
+  view.innerHTML = `
+    <div><span class="idtag">${esc(idText)}</span> <span class="s">${esc(l.name)} · ${fmtDT(o.createdAt)}</span></div>
+    <h2>Photos</h2>
+    <div class="photos" id="phs"></div>
+    <div class="row"><button class="btn" id="cam">📷 Take photo</button><button class="btn ghost" id="gal">🖼 Gallery</button></div>
+    <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+    <input type="file" id="galIn" accept="image/*" multiple hidden>
+    <label>Keyword (short – goes into the photo name)</label>
+    <input id="kw" maxlength="60" placeholder="e.g. missing guardrail" value="${esc(o.keyword)}">
+    <label>Category</label>
+    <select id="cat">${CATEGORIES.map(c => `<option ${c === o.category ? 'selected' : ''}>${c}</option>`).join('')}</select>
+    <label>Location note (optional)</label>
+    <input id="loc" placeholder="e.g. near Grid C-4, east corridor" value="${esc(o.location)}">
+    <label>Description</label>
+    <textarea id="desc" placeholder="Describe the observation…">${esc(o.description)}</textarea>
+    <label>Recommendation (optional)</label>
+    <textarea id="rec" placeholder="Leave empty and Claude will write it (${PLACEHOLDER})">${esc(o.recommendation)}</textarea>
+    <h2>Location on plan</h2>
+    <img id="locprev" class="locprev" alt="">
+    <button class="btn accent" id="save">Save observation</button>
+    ${isNew ? '' : '<button class="btn danger" id="del">Delete observation</button>'}`;
+  const renderPhotos = () => {
+    $('#phs').innerHTML = photos.map((ph, i) => `<div class="ph"><img src="${objURL(ph.blob)}" alt=""><span class="lt">${'abcdefghijklmnopqrstuvwxyz'[i] || i}</span><button data-i="${i}" aria-label="Remove">✕</button></div>`).join('') || '<div class="s" style="grid-column:1/-1">No photos yet.</div>';
+    $('#phs').querySelectorAll('button').forEach(b => b.onclick = () => { if (confirm('Remove this photo?')) { photos.splice(+b.dataset.i, 1); renderPhotos(); } });
+  };
+  renderPhotos();
+  const addFiles = async files => {
+    if (!files.length) return;
+    toast('Processing photo' + (files.length > 1 ? 's' : '') + '…');
+    for (const f of files) {
+      try { photos.push({ id: uid(), blob: await resizeImage(f, 2048, 'image/jpeg', 0.85) }); }
+      catch (e) { toast('Could not read a photo'); }
+    }
+    renderPhotos();
+  };
+  $('#cam').onclick = () => $('#camIn').click();
+  $('#gal').onclick = () => $('#galIn').click();
+  $('#camIn').onchange = async e => { await addFiles([...e.target.files]); e.target.value = ''; };
+  $('#galIn').onchange = async e => { await addFiles([...e.target.files]); e.target.value = ''; };
+  bitmap(l.planBlob).then(b => { if (my !== rendering) return; const c = planCrop(b, o.x, o.y, ''); $('#locprev').src = c.toDataURL('image/jpeg', 0.8); }).catch(() => {});
+
+  $('#save').onclick = async () => {
+    const kw = $('#kw').value.trim();
+    if (!kw) { $('#kw').focus(); return toast('Enter a short keyword'); }
+    if (!photos.length && !confirm('No photo added. Save anyway?')) return;
+    const rec = { ...o, seq: nextSeq, keyword: kw, category: $('#cat').value, location: $('#loc').value.trim(), description: $('#desc').value.trim(), recommendation: $('#rec').value.trim(), photos, updatedAt: Date.now() };
+    await put('obs', rec);
+    setting('lastCat', rec.category);
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    toast('Saved ' + idText);
+    history.back();
+  };
+  if (!isNew) $('#del').onclick = async () => {
+    if (!confirm('Delete ' + idText + '? This cannot be undone.')) return;
+    await del('obs', o.id); history.back();
+  };
+}
+
+async function vExport(my) {
+  const p = await get('projects', state.projectId);
+  setBar('Send to Desktop', true);
+  const obs = (await all('obs')).filter(o => o.projectId === p.id);
+  const groups = {};
+  obs.forEach(o => { const k = dateKey(o.createdAt); (groups[k] = groups[k] || []).push(o); });
+  const dates = Object.keys(groups).sort().reverse();
+  if (!dates.length) { view.innerHTML = '<div class="empty">No observations to send yet.</div>'; return; }
+  let sel = state.date && groups[state.date] ? state.date : dates[0];
+  view.innerHTML = `
+    <div class="s">${esc(p.code)} · ${esc(p.name)}</div>
+    <h2>Choose visit date</h2>
+    <div id="dates"></div>
+    <button class="btn accent" id="prep">Prepare file</button>
+    <div id="out"></div>`;
+  const drawDates = () => {
+    $('#dates').innerHTML = dates.map(k => { const g = groups[k], sent = g.every(o => o.exported);
+      return `<div class="card ${k === sel ? 'sel' : ''}" data-k="${k}"><div class="badge">${g.length}</div><div class="grow"><div class="t">${fmtKey(k)}</div><div class="s">${g.length} observation${g.length > 1 ? 's' : ''} ${sent ? '<span class="ok">· sent ✓</span>' : ''}</div></div></div>`; }).join('');
+    $('#dates').querySelectorAll('.card').forEach(c => c.onclick = () => { sel = c.dataset.k; $('#out').innerHTML = ''; $('#prep').style.display = ''; drawDates(); });
+  };
+  drawDates();
+  $('#prep').onclick = async () => {
+    const b = $('#prep'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Preparing…';
+    try {
+      const { file, ids } = await buildExport(p, sel, (d, n) => { b.innerHTML = `<span class="spin"></span>Preparing ${d}/${n}…`; });
+      if (my !== rendering) return;
+      b.style.display = 'none'; b.disabled = false; b.textContent = 'Prepare file';
+      const canShare = navigator.canShare && navigator.canShare({ files: [file] });
+      $('#out').innerHTML = `
+        <div class="box"><b>${esc(file.name)}</b><div class="s">${fmtSize(file.size)} · ${ids.length} observations · ready</div></div>
+        ${canShare ? '<button class="btn accent" id="share">📲 Send via WhatsApp / Share</button>' : '<div class="box s">Sharing isn\'t available in this browser – use Download.</div>'}
+        <button class="btn ghost" id="dl">⬇ Download to phone</button>
+        <div class="help">In the share menu choose <b>WhatsApp → “You (Message yourself)”</b> → Send. On the desktop, download the file from WhatsApp and tell Claude to build the SOR.</div>`;
+      const mark = async () => { for (const id of ids) { const o = await get('obs', id); if (o) { o.exported = Date.now(); await put('obs', o); } } groups[sel].forEach(o => o.exported = Date.now()); drawDates(); };
+      if (canShare) $('#share').onclick = async () => {
+        try { await navigator.share({ files: [file], title: file.name }); await mark(); toast('Sent ✓'); }
+        catch (e) { if (e.name !== 'AbortError') toast('Share failed – try Download'); }
+      };
+      $('#dl').onclick = async () => { const a = document.createElement('a'); a.href = objURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); await mark(); toast('Downloaded'); };
+    } catch (e) {
+      console.error(e); b.disabled = false; b.textContent = 'Prepare file'; toast('Could not prepare: ' + e.message, 4000);
+    }
+  };
+}
+
+async function vSettings() {
+  setBar('Settings', true);
+  let est = '';
+  try { if (navigator.storage && navigator.storage.estimate) { const e = await navigator.storage.estimate(); est = fmtSize(e.usage || 0) + ' used'; } } catch (e) { }
+  const obs = await all('obs');
+  const sent = obs.filter(o => o.exported);
+  view.innerHTML = `
+    <label>Your name (Prepared by)</label>
+    <input id="nm" placeholder="e.g. Vikram Kini" value="${esc(setting('name'))}">
+    <button class="btn" id="sv">Save name</button>
+    <h2>Share the app</h2>
+    <div class="box s">Colleagues open the link in Chrome on Android, then tap ⋮ → <b>Add to Home screen</b> (or <b>Install app</b>). Each phone keeps its own data.</div>
+    <button class="btn ghost" id="shr">🔗 Share app link</button>
+    <h2>Storage</h2>
+    <div class="box s">${obs.length} observations stored on this phone${est ? ' · ' + est : ''}.<br>Data stays on this phone until you send it.</div>
+    <button class="btn danger" id="clr" ${sent.length ? '' : 'disabled'}>Delete ${sent.length} already-sent observations</button>
+    <div class="help" style="text-align:center;margin-top:20px">Site Observation App v${APP_VERSION}</div>`;
+  $('#sv').onclick = () => { setting('name', $('#nm').value.trim()); toast('Saved'); };
+  $('#shr').onclick = async () => {
+    const url = location.href.split('#')[0].split('?')[0];
+    try { if (navigator.share) await navigator.share({ title: 'Site Observation App', url }); else { await navigator.clipboard.writeText(url); toast('Link copied'); } }
+    catch (e) { if (e.name !== 'AbortError') toast(url, 5000); }
+  };
+  $('#clr').onclick = async () => {
+    if (!confirm(`Delete ${sent.length} observations that were already sent? Floor plans and projects are kept.`)) return;
+    for (const o of sent) await del('obs', o.id);
+    toast('Deleted'); render();
+  };
+}
+
+/* ---------------- start ---------------- */
+history.replaceState(state, '');
+render();
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
