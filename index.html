@@ -9,7 +9,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--navy:#1f3a5f;--navy2:#2c4f7c;--accent:#f28c28;--bg:#f3f5f8;--card:#fff;--text:#1d2733;--muted:#6b7785;--line:#e1e6ec;--red:#d64541;--grey:#7d8894;--ok:#2e9e5b}
+:root{--navy:#1f3a5f;--navy2:#2c4f7c;--accent:#f28c28;--bg:#f3f5f8;--card:#fff;--text:#1d2733;--muted:#6b7785;--line:#e1e6ec;--red:#d64541;--grey:#7d8894;--ok:#2e9e5b;--blue:#2f6fd6}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:4px;height:56px;padding:0 6px;background:var(--navy);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2)}
@@ -71,6 +71,36 @@ h2{font-size:13px;text-transform:uppercase;color:var(--muted);letter-spacing:.05
 #toast.on{opacity:.94}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-3px;margin-right:6px}
 @keyframes sp{to{transform:rotate(360deg)}}
+/* v1.1 */
+.pin.cat-structure b{background:var(--blue)}.pin.cat-structure::after{border-top-color:var(--blue)}
+.pin.old{opacity:.5}
+.seg{display:flex;background:#e8edf3;border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:none;padding:11px 6px;border-radius:9px;font:600 15px system-ui,sans-serif;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.seg button.on.hse{color:var(--red)}.seg button.on.structure{color:var(--blue)}
+.cat{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;color:#fff;background:var(--grey);vertical-align:1px}
+.cat.hse{background:var(--red)}.cat.structure{background:var(--blue)}
+.lvgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lv{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 8px 10px;text-align:center;cursor:pointer;min-height:84px}
+.lv:active{background:#f7f9fb}
+.lv b{display:block;font-size:20px;color:var(--navy)}
+.lv span{display:block;font-size:12px;color:var(--muted);line-height:1.2;margin-top:2px}
+.lv i{position:absolute;top:6px;left:6px;font-style:normal;font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:9px;padding:0 6px;min-width:18px}
+.lv .ed{position:absolute;top:2px;right:2px;border:0;background:none;font-size:15px;color:var(--muted);width:30px;height:30px}
+.lv .lib{position:absolute;top:6px;right:8px;font-size:11px;color:var(--muted)}
+.tools{position:sticky;top:56px;z-index:8;background:var(--bg);padding:8px 0 6px;margin:0 -2px}
+.tools .row{gap:6px;margin-top:6px}
+.tools select{padding:9px 10px;font-size:14px}
+.tools .sortb{flex:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:0 12px;font:600 14px system-ui,sans-serif;color:var(--navy)}
+.dhead{display:flex;justify-content:space-between;align-items:baseline;margin:16px 2px 6px;font-weight:700;font-size:14px}
+.dhead span{font-weight:500;font-size:12px;color:var(--muted)}
+.pages{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.pg{background:#fff;border:2px solid var(--line);border-radius:10px;padding:6px;cursor:pointer}
+.pg.on{border-color:var(--accent)}
+.pg img{width:100%;aspect-ratio:1.4;object-fit:contain;background:#eef1f5;border-radius:6px;display:block}
+.pg input[type=text]{margin-top:6px;padding:8px;font-size:14px}
+.pg .pn{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:4px}
+.pg .pn input{width:20px;height:20px}
 </style>
 </head>
 <body>
@@ -84,8 +114,11 @@ h2{font-size:13px;text-transform:uppercase;color:var(--muted);letter-spacing:.05
 
 <script>
 'use strict';
-const APP_VERSION = '1.0.0';
-const CATEGORIES = ['HSE', 'Structure', 'Architectural', 'MEP', 'General'];
+const APP_VERSION = '1.1.0';
+const CATEGORIES = ['HSE', 'Structure'];
+const CAT_COLOR = { HSE: '#d64541', Structure: '#2f6fd6' };
+const catCls = c => String(c || '').toLowerCase().replace(/[^a-z]/g, '');
+const catColor = c => CAT_COLOR[c] || '#7d8894';
 const PLACEHOLDER = '[CLAUDE TO RECOMMEND]';
 
 /* ---------------- storage (IndexedDB) ---------------- */
@@ -180,6 +213,74 @@ function suggestCode(name) {
   return map[first] || words.map(w => w[0]).join('').toUpperCase().slice(0, 3) || 'LV';
 }
 
+/* ---------------- PDF floor plans (built-in PDF.js, works offline) ---------------- */
+let _pdfjs;
+async function pdfLib() {
+  if (!_pdfjs) {
+    _pdfjs = await import('./lib/pdf.min.mjs');
+    _pdfjs.GlobalWorkerOptions.workerSrc = new URL('./lib/pdf.worker.min.mjs', location.href).href;
+  }
+  return _pdfjs;
+}
+const isPdf = f => /pdf/i.test(f.type) || /\.pdf$/i.test(f.name || '');
+async function openPdf(file) {
+  const lib = await pdfLib();
+  return lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+}
+async function renderPdfPage(pdf, n, maxSide) {
+  const page = await pdf.getPage(n);
+  const v1 = page.getViewport({ scale: 1 });
+  const v = page.getViewport({ scale: maxSide / Math.max(v1.width, v1.height) });
+  const c = document.createElement('canvas');
+  c.width = Math.round(v.width); c.height = Math.round(v.height);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  await page.render({ canvas: c, canvasContext: ctx, viewport: v }).promise;
+  page.cleanup();
+  return c;
+}
+const pdfPagePlan = async (pdf, n) => canvasBlob(await renderPdfPage(pdf, n, 4000), 'image/png');
+
+/* ---------------- built-in floor plan library (plans/catalog.json on the app site) ---------------- */
+let syncing = false;
+async function syncCatalog(manual) {
+  if (syncing) return; syncing = true;
+  try {
+    let cat;
+    try {
+      const r = await fetch('plans/catalog.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      cat = await r.json();
+    } catch (e) { if (manual) toast('Could not reach the floor plan library – check internet'); return; }
+    const projects = await all('projects'), levels = await all('levels');
+    let n = 0, total = 0;
+    for (const cp of cat.projects || []) {
+      const code = cleanCode(cp.code); if (!code) continue;
+      let p = projects.find(x => x.code === code);
+      if (!p) { p = { id: 'lib-' + code, code, name: cp.name || code, created: Date.now() }; projects.push(p); }
+      if (!p.shared || (cp.name && p.name !== cp.name)) { p.shared = true; if (cp.name) p.name = cp.name; await put('projects', p); }
+      let order = 0;
+      for (const cl of cp.levels || []) {
+        order++; total++;
+        const lc = cleanCode(cl.code); if (!lc || !cl.file) continue;
+        let l = levels.find(x => x.projectId === p.id && cleanCode(x.code) === lc);
+        if (l && !l.shared) continue;                       // keep the user's own plan
+        const src = cl.file + '#' + (cl.rev || cat.version || '');
+        if (l && l.src === src && l.planBlob) {
+          if (l.name !== cl.name || l.order !== order) { l.name = cl.name || l.name; l.order = order; await put('levels', l); }
+          continue;
+        }
+        const r = await fetch(cl.file, { cache: 'no-store' }); if (!r.ok) continue;
+        const blob = await r.blob();
+        l = { ...(l || { id: 'lib-' + code + '-' + lc, projectId: p.id }), code: lc, name: cl.name || lc, planBlob: blob, order, shared: true, src };
+        await put('levels', l); n++;
+      }
+    }
+    if (n) { toast(n + ' floor plan' + (n > 1 ? 's' : '') + ' downloaded'); if (['home', 'project'].includes(state.s)) render(); }
+    else if (manual) toast(total ? 'Floor plans are up to date (' + total + ')' : 'The library has no floor plans yet');
+  } finally { syncing = false; }
+}
+
 /* ---------------- drawing (plan crops / all-pins) ---------------- */
 function drawMarker(ctx, x, y, r, text, color) {
   ctx.save();
@@ -203,7 +304,7 @@ function captionBar(ctx, w, h, text, top) {
   ctx.restore();
 }
 /* crop around one pin */
-function planCrop(img, x, y, label) {
+function planCrop(img, x, y, label, color = '#d64541') {
   const W = img.width, H = img.height;
   const side = Math.min(Math.min(W, H), Math.max(500, Math.max(W, H) * 0.3));
   let sx = x * W - side / 2, sy = y * H - side / 2;
@@ -216,9 +317,9 @@ function planCrop(img, x, y, label) {
   const px = (x * W - sx) * k, py = (y * H - sy) * k, r = out * 0.025;
   ctx.save();
   ctx.beginPath(); ctx.arc(px, py, r * 3.2, 0, Math.PI * 2);
-  ctx.lineWidth = r * 0.5; ctx.strokeStyle = 'rgba(214,69,65,0.85)'; ctx.stroke();
+  ctx.lineWidth = r * 0.5; ctx.strokeStyle = color; ctx.globalAlpha = 0.85; ctx.stroke();
   ctx.restore();
-  drawMarker(ctx, px, py, r, '', '#d64541');
+  drawMarker(ctx, px, py, r, '', color);
   if (label) captionBar(ctx, out, out, label, false);
   return c;
 }
@@ -232,7 +333,7 @@ function planAll(img, pins, title) {
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h + bh);
   ctx.drawImage(img, 0, bh, w, h);
   const r = Math.max(16, Math.max(w, h) * 0.016);
-  pins.forEach(p => drawMarker(ctx, p.x * w, bh + p.y * h, r, p.text, '#d64541'));
+  pins.forEach(p => drawMarker(ctx, p.x * w, bh + p.y * h, r, p.text, p.color || '#d64541'));
   captionBar(ctx, w, h + bh, title, true);
   return c;
 }
@@ -276,61 +377,71 @@ async function buildExport(p, dKey, progress) {
   const obs = (await all('obs'))
     .filter(o => o.projectId === p.id && dateKey(o.createdAt) === dKey && lmap[o.levelId])
     .sort((a, b) => (lmap[a.levelId].order - lmap[b.levelId].order) || (a.seq - b.seq));
-  const files = [];
-  const pc = cleanCode(p.code);
-  const txt = [];
-  const nl = '\r\n';
-  const by = setting('name');
-  txt.push('SITE OBSERVATION DATA', '',
-    'Project:       ' + p.name + ' (' + pc + ')',
-    'Visit date:    ' + fmtKey(dKey),
-    'Prepared by:   ' + (by || '-'),
-    'Observations:  ' + obs.length,
-    'Exported:      ' + fmtDT(Date.now()) + ' (Site Observation App v' + APP_VERSION + ')', '',
-    'FILES',
-    '  <ID><letter>_<keyword>.jpg      site photos (a, b, c ... when several per observation)',
-    '  <ID>_plan.jpg                   floor plan crop with the observation location circled',
-    '  ' + pc + '_<LEVEL>_plan_all_pins.jpg   whole level with every numbered pin of this visit',
-    '  "' + PLACEHOLDER + '" = no recommendation given on site; Claude drafts it from the DATASET and its judgement.', '');
+  const files = [], nl = '\r\n', pc = cleanCode(p.code), by = setting('name');
+  const indent = s => String(s || '').trim().split(/\r?\n/).map(x => '  ' + x).join(nl);
+  // group: category -> level -> observations (HSE first, then Structure, then anything else)
+  const cats = [...new Set(obs.map(o => o.category || 'General'))]
+    .sort((a, b) => ((CATEGORIES.indexOf(a) + 1 || 99) - (CATEGORIES.indexOf(b) + 1 || 99)) || a.localeCompare(b));
+  const plans = {};
+  const plan = async l => plans[l.id] || (plans[l.id] = await bitmap(l.planBlob));
   let done = 0;
-  const byLevel = {};
-  obs.forEach(o => (byLevel[o.levelId] = byLevel[o.levelId] || []).push(o));
-  for (const lid of Object.keys(byLevel).sort((a, b) => lmap[a].order - lmap[b].order)) {
-    const l = lmap[lid], list = byLevel[lid];
-    const img = await bitmap(l.planBlob);
-    const lc = cleanCode(l.code);
-    const allC = planAll(img, list.map(o => ({ x: o.x, y: o.y, text: pad(o.seq, 3) })),
-      pc + ' · ' + l.name + ' · ' + fmtKey(dKey) + ' · ' + list.length + ' observation' + (list.length > 1 ? 's' : ''));
-    files.push({ name: pc + '_' + lc + '_plan_all_pins.jpg', blob: await canvasBlob(allC, 'image/jpeg', 0.9) });
-    for (const o of list) {
-      const id = obsId(p, l, o), kw = slug(o.keyword);
-      const crop = planCrop(img, o.x, o.y, id + ' · ' + l.name + (o.location ? ' · ' + o.location : ''));
-      files.push({ name: id + '_plan.jpg', blob: await canvasBlob(crop, 'image/jpeg', 0.9) });
-      const names = [];
-      (o.photos || []).forEach((ph, i) => {
-        const letter = i < 26 ? 'abcdefghijklmnopqrstuvwxyz'[i] : 'z' + i;
-        const fn = id + letter + '_' + kw + '.jpg';
-        names.push(id + letter);
-        files.push({ name: fn, blob: ph.blob });
-      });
-      const indent = s => String(s || '').trim().split(/\r?\n/).map(x => '  ' + x).join(nl);
-      txt.push('=== ' + id + ' ===',
-        'Project:        ' + p.name + ' (' + pc + ')',
-        'Level:          ' + l.name,
-        'Location:       ' + (o.location ? o.location + ' ' : '') + '(see ' + id + '_plan.jpg)',
-        'Category:       ' + o.category,
-        'Keyword:        ' + (o.keyword || '-'),
-        'Photos:         ' + (names.length ? names.join(', ') : 'none'),
-        'Date/Time:      ' + fmtDT(o.createdAt),
-        'Description:', indent(o.description || '-'),
-        'Recommendation:', indent(o.recommendation && o.recommendation.trim() ? o.recommendation : PLACEHOLDER), '');
-      done++; progress && progress(done, obs.length);
+  const summary = ['SITE OBSERVATION DATA – SUMMARY', '',
+    'Project:       ' + p.name + ' (' + pc + ')', 'Visit date:    ' + fmtKey(dKey), 'Prepared by:   ' + (by || '-'),
+    'Observations:  ' + obs.length, 'Exported:      ' + fmtDT(Date.now()) + ' (Site Observation App v' + APP_VERSION + ')', '',
+    'One folder per category – build one SOR per folder:'];
+  for (const cat of cats) {
+    const dir = cat.replace(/[^A-Za-z0-9 -]/g, '') + '/';
+    const list = obs.filter(o => (o.category || 'General') === cat);
+    const lvls = [...new Set(list.map(o => o.levelId))];
+    summary.push('  ' + dir + '   ' + list.length + ' observation' + (list.length > 1 ? 's' : '') + ' – ' + lvls.map(id => lmap[id].name).join(', '));
+    const txt = ['SITE OBSERVATION DATA', '',
+      'Project:       ' + p.name + ' (' + pc + ')',
+      'Category:      ' + cat,
+      'Visit date:    ' + fmtKey(dKey),
+      'Levels:        ' + lvls.map(id => lmap[id].name).join(', '),
+      'Prepared by:   ' + (by || '-'),
+      'Observations:  ' + list.length,
+      'Exported:      ' + fmtDT(Date.now()) + ' (Site Observation App v' + APP_VERSION + ')', '',
+      'FILES',
+      '  <ID><letter>_<keyword>.jpg      site photos (a, b, c ... when several per observation)',
+      '  <ID>_plan.jpg                   floor plan crop with the observation location circled',
+      '  ' + pc + '_<LEVEL>_plan_all_pins.jpg   whole level with every numbered ' + cat + ' pin of this visit',
+      '  "' + PLACEHOLDER + '" = no recommendation given on site; Claude drafts it from the DATASET and its judgement.', ''];
+    for (const lid of lvls) {
+      const l = lmap[lid], lc = cleanCode(l.code), img = await plan(l);
+      const lo = list.filter(o => o.levelId === lid);
+      const allC = planAll(img, lo.map(o => ({ x: o.x, y: o.y, text: pad(o.seq, 3), color: catColor(cat) })),
+        pc + ' · ' + l.name + ' · ' + cat + ' · ' + fmtKey(dKey) + ' · ' + lo.length + ' observation' + (lo.length > 1 ? 's' : ''));
+      files.push({ name: dir + pc + '_' + lc + '_plan_all_pins.jpg', blob: await canvasBlob(allC, 'image/jpeg', 0.9) });
+      for (const o of lo) {
+        const id = obsId(p, l, o), kw = slug(o.keyword);
+        const crop = planCrop(img, o.x, o.y, id + ' · ' + l.name + (o.location ? ' · ' + o.location : ''), catColor(cat));
+        files.push({ name: dir + id + '_plan.jpg', blob: await canvasBlob(crop, 'image/jpeg', 0.9) });
+        const names = [];
+        (o.photos || []).forEach((ph, i) => {
+          const letter = i < 26 ? 'abcdefghijklmnopqrstuvwxyz'[i] : 'z' + i;
+          names.push(id + letter);
+          files.push({ name: dir + id + letter + '_' + kw + '.jpg', blob: ph.blob });
+        });
+        txt.push('=== ' + id + ' ===',
+          'Project:        ' + p.name + ' (' + pc + ')',
+          'Level:          ' + l.name,
+          'Location:       ' + (o.location ? o.location + ' ' : '') + '(see ' + id + '_plan.jpg)',
+          'Category:       ' + cat,
+          'Keyword:        ' + (o.keyword || '-'),
+          'Photos:         ' + (names.length ? names.join(', ') : 'none'),
+          'Date/Time:      ' + fmtDT(o.createdAt),
+          'Description:', indent(o.description || '-'),
+          'Recommendation:', indent(o.recommendation && o.recommendation.trim() ? o.recommendation : PLACEHOLDER), '');
+        done++; progress && progress(done, obs.length);
+      }
     }
-    if (img.close) img.close();
+    files.push({ name: dir + 'observations.txt', blob: new Blob([txt.join(nl)], { type: 'text/plain' }) });
   }
-  files.unshift({ name: 'observations.txt', blob: new Blob([txt.join(nl)], { type: 'text/plain' }) });
+  Object.values(plans).forEach(b => b.close && b.close());
+  files.unshift({ name: 'summary.txt', blob: new Blob([summary.join(nl)], { type: 'text/plain' }) });
   const zip = await makeZip(files);
-  return { file: new File([zip], pc + '_' + dKey + '.zip', { type: 'application/zip' }), ids: obs.map(o => o.id) };
+  return { file: new File([zip], pc + '_' + dKey + '.zip', { type: 'application/zip' }), ids: obs.map(o => o.id), cats: cats.map(c => [c, obs.filter(o => (o.category || 'General') === c).length]) };
 }
 
 /* ---------------- router ---------------- */
@@ -387,11 +498,11 @@ async function vProjectForm() {
   setBar(p ? 'Edit project' : 'New project', true);
   view.innerHTML = `
     <label>Project code (short, used in file names)</label>
-    <input id="code" maxlength="12" placeholder="e.g. BV1" value="${esc(p?.code || '')}" autocapitalize="characters">
+    <input id="code" maxlength="12" placeholder="e.g. BV1" value="${esc(p?.code || '')}" autocapitalize="characters" ${p?.shared ? 'disabled' : ''}>
     <label>Project name</label>
     <input id="name" placeholder="e.g. Barari Views 1" value="${esc(p?.name || '')}">
     <button class="btn accent" id="save">Save project</button>
-    ${p ? '<button class="btn danger" id="del">Delete project</button>' : ''}`;
+    ${p?.shared ? '<div class="help">This project comes from the built-in floor plan library, so it cannot be deleted here.</div>' : p ? '<button class="btn danger" id="del">Delete project</button>' : ''}`;
   $('#save').onclick = async () => {
     const code = cleanCode($('#code').value), name = $('#name').value.trim();
     if (!code || !name) return toast('Enter both code and name');
@@ -401,7 +512,7 @@ async function vProjectForm() {
     await put('projects', rec);
     if (p) history.back(); else go('project', { projectId: rec.id }, true);
   };
-  if (p) $('#del').onclick = async () => {
+  if (p && !p.shared) $('#del').onclick = async () => {
     const obs = (await all('obs')).filter(o => o.projectId === p.id);
     if (!confirm(`Delete project ${p.code} with all its floor plans and ${obs.length} observations? This cannot be undone.`)) return;
     for (const o of obs) await del('obs', o.id);
@@ -411,61 +522,141 @@ async function vProjectForm() {
   };
 }
 
+const filters = {};
 async function vProject() {
   const p = await get('projects', state.projectId);
   if (!p) return go('home', {}, true);
   setBar(p.code + ' · ' + p.name, true, [{ label: '✎', aria: 'Edit project', fn: () => go('projectForm', { projectId: p.id }) }]);
   const levels = (await all('levels')).filter(l => l.projectId === p.id).sort((a, b) => a.order - b.order);
   const lmap = Object.fromEntries(levels.map(l => [l.id, l]));
-  const obs = (await all('obs')).filter(o => o.projectId === p.id).sort((a, b) => b.createdAt - a.createdAt);
+  const obs = (await all('obs')).filter(o => o.projectId === p.id && lmap[o.levelId]);
   const today = dateKey(Date.now());
   const nToday = obs.filter(o => dateKey(o.createdAt) === today).length;
+  const f = filters[p.id] = filters[p.id] || { cat: 'All', date: 'All', sort: 'desc' };
+  const dates = [...new Set(obs.map(o => dateKey(o.createdAt)))].sort().reverse();
+  if (f.date !== 'All' && !dates.includes(f.date)) f.date = 'All';
   view.innerHTML = `
     <button class="btn accent" id="send">📤 Send to Desktop ${nToday ? '(' + nToday + ' today)' : ''}</button>
-    <h2>Levels / floor plans</h2>
-    ${levels.map(l => `<div class="card" data-l="${l.id}"><img class="thumb" src="${objURL(l.planBlob)}" alt=""><div class="grow"><div class="t">${esc(l.name)}</div><div class="s">${esc(l.code)} · ${obs.filter(o => o.levelId === l.id).length} observations</div></div><button class="mini" data-e="${l.id}" aria-label="Edit level">✎</button></div>`).join('') || '<div class="empty">No floor plans yet. Add a level to start.</div>'}
+    <h2>Select level</h2>
+    ${levels.length ? '<div class="lvgrid">' + levels.map(l => { const n = obs.filter(o => o.levelId === l.id && dateKey(o.createdAt) === today).length;
+      return `<div class="lv" data-l="${l.id}">${n ? `<i>${n}</i>` : ''}${l.shared ? '<span class="lib">📚</span>' : `<button class="ed" data-e="${l.id}" aria-label="Edit level">✎</button>`}<b>${esc(l.code)}</b><span>${esc(l.name)}</span></div>`; }).join('') + '</div>'
+      : '<div class="empty">No floor plans yet. Add a level to start.</div>'}
     <button class="btn ghost" id="addl">＋ Add level / floor plan</button>
     <h2>Observations</h2>
-    ${obs.slice(0, 60).map(o => { const l = lmap[o.levelId]; if (!l) return ''; const ph = o.photos && o.photos[0];
-      return `<div class="card" data-o="${o.id}">${ph ? `<img class="thumb" src="${objURL(ph.blob)}" alt="">` : '<div class="thumb"></div>'}<div class="grow"><div class="t">${esc(obsId(p, l, o))} · ${esc(o.keyword || '')}</div><div class="s">${esc(o.category)} · ${fmtDT(o.createdAt)} ${o.exported ? '<span class="ok">· sent ✓</span>' : ''}</div></div><span class="chev">›</span></div>`; }).join('') || '<div class="empty">No observations yet.</div>'}`;
+    <div class="tools">
+      <div class="seg" id="fcat">${['All', ...CATEGORIES].map(c => `<button data-c="${c}" class="${c === f.cat ? 'on ' : ''}${catCls(c)}">${c}</button>`).join('')}</div>
+      <div class="row">
+        <select id="fdate"><option value="All">All dates</option>${dates.map(d => `<option value="${d}" ${d === f.date ? 'selected' : ''}>${fmtKey(d)}${d === today ? ' (today)' : ''}</option>`).join('')}</select>
+        <button class="sortb" id="fsort">${f.sort === 'desc' ? 'Newest ↓' : 'Oldest ↑'}</button>
+      </div>
+    </div>
+    <div id="olist"></div>`;
+  const drawList = () => {
+    let list = obs.filter(o => (f.cat === 'All' || o.category === f.cat) && (f.date === 'All' || dateKey(o.createdAt) === f.date));
+    list.sort((a, b) => f.sort === 'desc' ? b.createdAt - a.createdAt : a.createdAt - b.createdAt);
+    const groups = [];
+    list.forEach(o => { const k = dateKey(o.createdAt); let g = groups.find(x => x.k === k); if (!g) groups.push(g = { k, items: [] }); g.items.push(o); });
+    $('#olist').innerHTML = groups.map(g => {
+      const counts = CATEGORIES.map(c => [c, g.items.filter(o => o.category === c).length]).filter(x => x[1]).map(x => x[1] + ' ' + x[0]).join(' · ');
+      return `<div class="dhead">${fmtKey(g.k)}${g.k === today ? ' (today)' : ''}<span>${counts}</span></div>` + g.items.map(o => { const l = lmap[o.levelId], ph = o.photos && o.photos[0];
+        return `<div class="card" data-o="${o.id}">${ph ? `<img class="thumb" src="${objURL(ph.blob)}" alt="">` : '<div class="thumb"></div>'}<div class="grow"><div class="t">${esc(o.keyword || '(no keyword)')}</div><div class="s"><span class="cat ${catCls(o.category)}">${esc(o.category)}</span> ${esc(obsId(p, l, o))} · ${esc(l.name)}</div><div class="s">${fmtDT(o.createdAt).slice(11)}${o.exported ? ' <span class="ok">· sent ✓</span>' : ''}</div></div><span class="chev">›</span></div>`; }).join('');
+    }).join('') || '<div class="empty">No observations for this filter.</div>';
+    $('#olist').querySelectorAll('[data-o]').forEach(c => c.onclick = () => go('obs', { obsId: c.dataset.o }));
+  };
+  drawList();
+  $('#fcat').querySelectorAll('button').forEach(b => b.onclick = () => { f.cat = b.dataset.c; $('#fcat').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawList(); });
+  $('#fdate').onchange = e => { f.date = e.target.value; drawList(); };
+  $('#fsort').onclick = e => { f.sort = f.sort === 'desc' ? 'asc' : 'desc'; e.target.textContent = f.sort === 'desc' ? 'Newest ↓' : 'Oldest ↑'; drawList(); };
   view.querySelectorAll('[data-l]').forEach(c => c.onclick = () => go('plan', { levelId: c.dataset.l }));
   view.querySelectorAll('[data-e]').forEach(b => b.onclick = e => { e.stopPropagation(); go('levelForm', { levelId: b.dataset.e }); });
-  view.querySelectorAll('[data-o]').forEach(c => c.onclick = () => go('obs', { obsId: c.dataset.o }));
   $('#addl').onclick = () => go('levelForm', { projectId: p.id });
   $('#send').onclick = () => go('export', { projectId: p.id });
 }
 
-async function vLevelForm() {
+async function vLevelForm(my) {
   const l = state.levelId ? await get('levels', state.levelId) : null;
   const projectId = l ? l.projectId : state.projectId;
-  setBar(l ? 'Edit level' : 'Add level', true);
-  let planBlob = l?.planBlob || null, codeTouched = !!l;
+  setBar(l ? 'Edit level' : 'Add level / floor plan', true);
+  let planBlob = l?.planBlob || null, codeTouched = !!l, pdf = null;
   view.innerHTML = `
-    <label>Level name</label>
-    <input id="name" placeholder="e.g. Level 6, Podium 3, Roof" value="${esc(l?.name || '')}">
-    <label>Level code (short, used in file names)</label>
-    <input id="code" maxlength="8" placeholder="e.g. L06" value="${esc(l?.code || '')}" autocapitalize="characters">
-    <label>Floor plan image</label>
-    <input id="file" type="file" accept="image/*">
-    <div class="help">PNG or JPG. For PDF drawings, send the PDF to Claude and ask for it to be converted into one image per level.</div>
+    <label>Floor plan</label>
+    <div class="row"><button class="btn" id="bpdf">📄 PDF or image file</button><button class="btn ghost" id="bcam">📷 Photo of plan</button></div>
+    <input id="file" type="file" accept="application/pdf,.pdf,image/*" hidden>
+    <input id="camf" type="file" accept="image/*" capture="environment" hidden>
+    <div id="pdfbox"></div>
     <img id="prev" class="planprev" ${planBlob ? `src="${objURL(planBlob)}"` : 'style="display:none"'} alt="">
-    <button class="btn accent" id="save">Save level</button>
-    ${l ? '<button class="btn danger" id="del">Delete level</button>' : ''}`;
+    <div id="single">
+      <label>Level name</label>
+      <input id="name" placeholder="e.g. Level 3, Podium 3, Roof" value="${esc(l?.name || '')}">
+      <label>Level code (short, used in file names)</label>
+      <input id="code" maxlength="8" placeholder="e.g. L03" value="${esc(l?.code || '')}" autocapitalize="characters">
+      <button class="btn accent" id="save">Save level</button>
+      ${l ? '<button class="btn danger" id="del">Delete level</button>' : ''}
+    </div>`;
   $('#name').oninput = () => { if (!codeTouched) $('#code').value = suggestCode($('#name').value); };
   $('#code').oninput = () => { codeTouched = true; };
-  $('#file').onchange = async e => {
-    const f = e.target.files[0]; if (!f) return;
-    if (/pdf/i.test(f.type) || /\.pdf$/i.test(f.name)) { e.target.value = ''; return toast('PDF not supported – ask Claude to convert it to an image', 4000); }
+  $('#bpdf').onclick = () => $('#file').click();
+  $('#bcam').onclick = () => $('#camf').click();
+  const showPlan = b => { planBlob = b; const pr = $('#prev'); pr.src = objURL(b); pr.style.display = 'block'; };
+  const useImage = async f => {
     toast('Loading plan…');
-    try {
-      planBlob = await resizeImage(f, 4000, /jpe?g/i.test(f.type) ? 'image/jpeg' : 'image/png', 0.92);
-      const pr = $('#prev'); pr.src = objURL(planBlob); pr.style.display = 'block';
-    } catch (err) { toast('Could not read that image'); }
+    try { showPlan(await resizeImage(f, 4000, /jpe?g/i.test(f.type) ? 'image/jpeg' : 'image/png', 0.92)); }
+    catch (err) { toast('Could not read that image'); }
+  };
+  $('#camf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (f) { $('#pdfbox').innerHTML = ''; await useImage(f); } };
+  $('#file').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    $('#pdfbox').innerHTML = '';
+    if (!isPdf(f)) return useImage(f);
+    const box = $('#pdfbox');
+    box.innerHTML = '<div class="box s"><span class="spin" style="border-color:#ccd;border-top-color:var(--navy)"></span>Reading PDF…</div>';
+    try { pdf = await openPdf(f); } catch (err) { console.error(err); box.innerHTML = '<div class="box s">Could not open this PDF.</div>'; return; }
+    if (my !== rendering) return;
+    if (pdf.numPages === 1) { box.innerHTML = '<div class="box s">Rendering plan…</div>'; showPlan(await pdfPagePlan(pdf, 1)); box.innerHTML = ''; return; }
+    const levelsNow = (await all('levels')).filter(x => x.projectId === projectId);
+    box.innerHTML = `<div class="box s">This PDF has <b>${pdf.numPages} pages</b>. ${l ? 'Tap the page for this level.' : 'Tick the pages to add, and name each level (one page = one level).'}</div><div class="pages" id="pages"></div>
+      ${l ? '' : '<button class="btn accent" id="addsel">Add ticked pages as levels</button>'}`;
+    if (!l) $('#single').style.display = 'none';
+    $('#prev').style.display = 'none';
+    const pages = $('#pages');
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const d = document.createElement('div'); d.className = 'pg'; d.dataset.n = n;
+      d.innerHTML = `<img alt=""><div class="pn">${l ? '' : '<input type="checkbox" checked>'}Page ${n}</div>${l ? '' : `<input type="text" placeholder="Level name" value="">`}`;
+      pages.appendChild(d);
+      if (l) d.onclick = async () => {
+        pages.querySelectorAll('.pg').forEach(x => x.classList.toggle('on', x === d));
+        toast('Rendering page ' + n + '…'); showPlan(await pdfPagePlan(pdf, n));
+      };
+      else d.querySelector('input[type=text]').onfocus = () => { d.querySelector('input[type=checkbox]').checked = true; };
+    }
+    for (const d of pages.children) {
+      if (my !== rendering) return;
+      const c = await renderPdfPage(pdf, +d.dataset.n, 500);
+      d.querySelector('img').src = c.toDataURL('image/jpeg', 0.7);
+    }
+    if (!l) $('#addsel').onclick = async () => {
+      const pick = [...pages.children].filter(d => d.querySelector('input[type=checkbox]').checked);
+      if (!pick.length) return toast('Tick at least one page');
+      const names = pick.map(d => d.querySelector('input[type=text]').value.trim());
+      if (names.some(n => !n)) return toast('Give every ticked page a level name');
+      const used = new Set(levelsNow.map(x => cleanCode(x.code)));
+      const btn = $('#addsel'); btn.disabled = true;
+      let i = 0;
+      for (const d of pick) {
+        const name = names[i++]; let code = cleanCode(suggestCode(name)), k = 2;
+        while (used.has(code)) code = cleanCode(suggestCode(name)) + '-' + k++;
+        used.add(code);
+        btn.innerHTML = `<span class="spin"></span>Adding ${i}/${pick.length}…`;
+        await put('levels', { id: uid(), projectId, name, code, planBlob: await pdfPagePlan(pdf, +d.dataset.n), order: Date.now() + i });
+      }
+      toast(pick.length + ' level' + (pick.length > 1 ? 's' : '') + ' added');
+      history.back();
+    };
   };
   $('#save').onclick = async () => {
     const name = $('#name').value.trim(), code = cleanCode($('#code').value || suggestCode(name));
     if (!name) return toast('Enter the level name');
-    if (!planBlob) return toast('Choose the floor plan image');
+    if (!planBlob) return toast('Choose the floor plan (PDF, image or photo)');
     const levels = (await all('levels')).filter(x => x.projectId === projectId);
     if (levels.some(x => cleanCode(x.code) === code && x.id !== l?.id)) return toast('That level code is already used');
     const rec = l ? { ...l, name, code, planBlob } : { id: uid(), projectId, name, code, planBlob, order: Date.now() };
@@ -508,7 +699,7 @@ async function vPlan(my) {
     d.innerHTML = '<b>' + esc(text) + '</b>'; if (id) d.dataset.id = id;
     pz.appendChild(d); return d;
   };
-  obs.sort((a, b) => a.seq - b.seq).forEach(o => addPin(o.x, o.y, pad(o.seq, 3), dateKey(o.createdAt) === today ? '' : 'old', o.id));
+  obs.sort((a, b) => a.seq - b.seq).forEach(o => addPin(o.x, o.y, pad(o.seq, 3), 'cat-' + catCls(o.category) + (dateKey(o.createdAt) === today ? '' : ' old'), o.id));
 
   let s = 1, tx = 0, ty = 0, minS = 0.1;
   const apply = () => { pz.style.transform = `translate(${tx}px,${ty}px) scale(${s})`; pz.style.setProperty('--inv', 1 / s); viewMem[l.id] = { s, tx, ty }; };
@@ -578,7 +769,7 @@ async function vObs(my) {
   if (state.obsId) { o = await get('obs', state.obsId); if (!o) return history.back(); }
   else {
     isNew = true;
-    o = { id: uid(), levelId: state.levelId, x: state.x, y: state.y, keyword: '', category: setting('lastCat') || 'HSE', location: '', description: '', recommendation: '', photos: [], createdAt: Date.now() };
+    o = { id: uid(), levelId: state.levelId, x: state.x, y: state.y, keyword: '', category: CATEGORIES.includes(setting('lastCat')) ? setting('lastCat') : 'HSE', location: '', description: '', recommendation: '', photos: [], createdAt: Date.now() };
   }
   const l = await get('levels', o.levelId), p = await get('projects', l.projectId);
   o.projectId = p.id;
@@ -597,7 +788,7 @@ async function vObs(my) {
     <label>Keyword (short – goes into the photo name)</label>
     <input id="kw" maxlength="60" placeholder="e.g. missing guardrail" value="${esc(o.keyword)}">
     <label>Category</label>
-    <select id="cat">${CATEGORIES.map(c => `<option ${c === o.category ? 'selected' : ''}>${c}</option>`).join('')}</select>
+    <div class="seg" id="cat">${[...new Set([...CATEGORIES, o.category])].map(c => `<button type="button" data-c="${esc(c)}" class="${c === o.category ? 'on ' : ''}${catCls(c)}">${esc(c)}</button>`).join('')}</div>
     <label>Location note (optional)</label>
     <input id="loc" placeholder="e.g. near Grid C-4, east corridor" value="${esc(o.location)}">
     <label>Description</label>
@@ -613,6 +804,8 @@ async function vObs(my) {
     $('#phs').querySelectorAll('button').forEach(b => b.onclick = () => { if (confirm('Remove this photo?')) { photos.splice(+b.dataset.i, 1); renderPhotos(); } });
   };
   renderPhotos();
+  let cat = o.category;
+  $('#cat').querySelectorAll('button').forEach(b => b.onclick = () => { cat = b.dataset.c; $('#cat').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
   const addFiles = async files => {
     if (!files.length) return;
     toast('Processing photo' + (files.length > 1 ? 's' : '') + '…');
@@ -626,13 +819,13 @@ async function vObs(my) {
   $('#gal').onclick = () => $('#galIn').click();
   $('#camIn').onchange = async e => { await addFiles([...e.target.files]); e.target.value = ''; };
   $('#galIn').onchange = async e => { await addFiles([...e.target.files]); e.target.value = ''; };
-  bitmap(l.planBlob).then(b => { if (my !== rendering) return; const c = planCrop(b, o.x, o.y, ''); $('#locprev').src = c.toDataURL('image/jpeg', 0.8); }).catch(() => {});
+  bitmap(l.planBlob).then(b => { if (my !== rendering) return; const c = planCrop(b, o.x, o.y, '', catColor(o.category)); $('#locprev').src = c.toDataURL('image/jpeg', 0.8); }).catch(() => {});
 
   $('#save').onclick = async () => {
     const kw = $('#kw').value.trim();
     if (!kw) { $('#kw').focus(); return toast('Enter a short keyword'); }
     if (!photos.length && !confirm('No photo added. Save anyway?')) return;
-    const rec = { ...o, seq: nextSeq, keyword: kw, category: $('#cat').value, location: $('#loc').value.trim(), description: $('#desc').value.trim(), recommendation: $('#rec').value.trim(), photos, updatedAt: Date.now() };
+    const rec = { ...o, seq: nextSeq, keyword: kw, category: cat, location: $('#loc').value.trim(), description: $('#desc').value.trim(), recommendation: $('#rec').value.trim(), photos, updatedAt: Date.now() };
     await put('obs', rec);
     setting('lastCat', rec.category);
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
@@ -662,28 +855,23 @@ async function vExport(my) {
     <div id="out"></div>`;
   const drawDates = () => {
     $('#dates').innerHTML = dates.map(k => { const g = groups[k], sent = g.every(o => o.exported);
-      return `<div class="card ${k === sel ? 'sel' : ''}" data-k="${k}"><div class="badge">${g.length}</div><div class="grow"><div class="t">${fmtKey(k)}</div><div class="s">${g.length} observation${g.length > 1 ? 's' : ''} ${sent ? '<span class="ok">· sent ✓</span>' : ''}</div></div></div>`; }).join('');
+      const cc = [...new Set(g.map(o => o.category))].map(c => `<span class="cat ${catCls(c)}">${g.filter(o => o.category === c).length} ${esc(c)}</span>`).join(' ');
+      return `<div class="card ${k === sel ? 'sel' : ''}" data-k="${k}"><div class="badge">${g.length}</div><div class="grow"><div class="t">${fmtKey(k)}</div><div class="s">${cc} ${sent ? '<span class="ok">· downloaded ✓</span>' : ''}</div></div></div>`; }).join('');
     $('#dates').querySelectorAll('.card').forEach(c => c.onclick = () => { sel = c.dataset.k; $('#out').innerHTML = ''; $('#prep').style.display = ''; drawDates(); });
   };
   drawDates();
   $('#prep').onclick = async () => {
     const b = $('#prep'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Preparing…';
     try {
-      const { file, ids } = await buildExport(p, sel, (d, n) => { b.innerHTML = `<span class="spin"></span>Preparing ${d}/${n}…`; });
+      const { file, ids, cats } = await buildExport(p, sel, (d, n) => { b.innerHTML = `<span class="spin"></span>Preparing ${d}/${n}…`; });
       if (my !== rendering) return;
       b.style.display = 'none'; b.disabled = false; b.textContent = 'Prepare file';
-      const canShare = navigator.canShare && navigator.canShare({ files: [file] });
       $('#out').innerHTML = `
-        <div class="box"><b>${esc(file.name)}</b><div class="s">${fmtSize(file.size)} · ${ids.length} observations · ready</div></div>
-        ${canShare ? '<button class="btn accent" id="share">📲 Send via WhatsApp / Share</button>' : '<div class="box s">Sharing isn\'t available in this browser – use Download.</div>'}
-        <button class="btn ghost" id="dl">⬇ Download to phone</button>
-        <div class="help">In the share menu choose <b>WhatsApp → “You (Message yourself)”</b> → Send. On the desktop, download the file from WhatsApp and tell Claude to build the SOR.</div>`;
+        <div class="box"><b>${esc(file.name)}</b><div class="s">${fmtSize(file.size)} · ${cats.map(c => c[1] + ' ' + esc(c[0])).join(' · ')} · one folder per category</div></div>
+        <button class="btn accent" id="dl">⬇ Download to phone</button>
+        <div class="box s"><b>Then send it to your desktop:</b><br>WhatsApp → <b>You (Message yourself)</b> → 📎 → <b>Document</b> → Browse → <b>Downloads</b> → ${esc(file.name)} → Send.<br>On the desktop, download it from WhatsApp and tell Claude to build the SOR.</div>`;
       const mark = async () => { for (const id of ids) { const o = await get('obs', id); if (o) { o.exported = Date.now(); await put('obs', o); } } groups[sel].forEach(o => o.exported = Date.now()); drawDates(); };
-      if (canShare) $('#share').onclick = async () => {
-        try { await navigator.share({ files: [file], title: file.name }); await mark(); toast('Sent ✓'); }
-        catch (e) { if (e.name !== 'AbortError') toast('Share failed – try Download'); }
-      };
-      $('#dl').onclick = async () => { const a = document.createElement('a'); a.href = objURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); await mark(); toast('Downloaded'); };
+      $('#dl').onclick = async () => { const a = document.createElement('a'); a.href = objURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); await mark(); toast('Saved to Downloads ✓', 3000); };
     } catch (e) {
       console.error(e); b.disabled = false; b.textContent = 'Prepare file'; toast('Could not prepare: ' + e.message, 4000);
     }
@@ -700,6 +888,9 @@ async function vSettings() {
     <label>Your name (Prepared by)</label>
     <input id="nm" placeholder="e.g. Vikram Kini" value="${esc(setting('name'))}">
     <button class="btn" id="sv">Save name</button>
+    <h2>Floor plan library</h2>
+    <div class="box s">Floor plans built into the app download automatically when the phone is online. Tap below to check for new or updated plans now.</div>
+    <button class="btn ghost" id="sync">🔄 Update floor plans</button>
     <h2>Share the app</h2>
     <div class="box s">Colleagues open the link in Chrome on Android, then tap ⋮ → <b>Add to Home screen</b> (or <b>Install app</b>). Each phone keeps its own data.</div>
     <button class="btn ghost" id="shr">🔗 Share app link</button>
@@ -708,6 +899,7 @@ async function vSettings() {
     <button class="btn danger" id="clr" ${sent.length ? '' : 'disabled'}>Delete ${sent.length} already-sent observations</button>
     <div class="help" style="text-align:center;margin-top:20px">Site Observation App v${APP_VERSION}</div>`;
   $('#sv').onclick = () => { setting('name', $('#nm').value.trim()); toast('Saved'); };
+  $('#sync').onclick = () => { toast('Checking floor plan library…'); syncCatalog(true); };
   $('#shr').onclick = async () => {
     const url = location.href.split('#')[0].split('?')[0];
     try { if (navigator.share) await navigator.share({ title: 'Site Observation App', url }); else { await navigator.clipboard.writeText(url); toast('Link copied'); } }
@@ -724,6 +916,8 @@ async function vSettings() {
 history.replaceState(state, '');
 render();
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+setTimeout(() => syncCatalog(false), 800);
+window.addEventListener('online', () => syncCatalog(false));
 </script>
 </body>
 </html>
